@@ -501,8 +501,22 @@ def build_report(xlsx_path, output_path):
 
     add_heading(
         doc,
-        "Caminos con tiempos óptimos sugeridos (opción c)",
-        level=3,
+        "Opción (b) — Tint con costo intensivo MÁXIMO",
+        level=2,
+    )
+    write_paths_table(
+        doc, data["paths"], data["crash_time"],
+        "Caminos con tiempos intensivos (opción b)",
+    )
+    write_activity_slack_table(
+        doc, data["activities"], data["successors"], data["crash_time"],
+        "Tabla de holguras por actividad — tiempos intensivos, costo máximo (opción b)",
+    )
+
+    add_heading(
+        doc,
+        "Opción (c) — Tint con costo ÓPTIMO",
+        level=2,
     )
     write_paths_table(
         doc, data["paths"], data["sugerido"],
