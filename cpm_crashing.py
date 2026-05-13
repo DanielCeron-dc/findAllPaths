@@ -223,9 +223,9 @@ def print_paths_table(title, paths, time_dict):
     return critical
 
 
-def solve_optimal(activities, paths, t_optimal):
+def solve_optimal(activities, paths, target_time):
     """
-    PL para el cronograma de mínimo costo cuya duración del proyecto es t_optimal.
+    PL para el cronograma de mínimo costo cuya duración del proyecto es target_time.
 
     Variable x_a = días que la actividad se EXTIENDE desde el tiempo intensivo
     hacia el normal (0 <= x_a <= max_intensificacion_a). El costo total es
@@ -233,7 +233,7 @@ def solve_optimal(activities, paths, t_optimal):
     los ahorros sum(costo_por_dia_a * x_a) (equivalente a minimizar el negativo).
 
     Restricciones: para cada camino P,
-        sum_{a en P} x_a <= t_optimal - sum_{a en P} tiempo_intensivo_a
+        sum_{a en P} x_a <= target_time - sum_{a en P} tiempo_intensivo_a
     """
     act_list = list(activities.keys())
     n = len(act_list)
@@ -248,7 +248,7 @@ def solve_optimal(activities, paths, t_optimal):
             row[idx[a]] += 1
         crash_sum = sum(activities[a]["tiempo_intensivo"] for a in path)
         A_rows.append(row)
-        b_rows.append(t_optimal - crash_sum)
+        b_rows.append(target_time - crash_sum)
 
     A_ub = np.array(A_rows)
     b_ub = np.array(b_rows)
@@ -498,8 +498,12 @@ def benefit_cost_summary(
     print()
 
 
-def compute_analysis(xlsx_path):
-    """Carga el archivo y devuelve un diccionario con todos los resultados."""
+def compute_analysis(xlsx_path, extra_target_days=5):
+    """Carga el archivo y devuelve un diccionario con todos los resultados.
+
+    extra_target_days: días adicionales sobre Tint para resolver un escenario
+    de plazo extendido (por defecto Tint + 5).
+    """
     activities, successors = load_network(xlsx_path)
     starts, ends = find_starts_and_ends(activities, successors)
     paths = all_paths(successors, starts, ends)
@@ -516,6 +520,11 @@ def compute_analysis(xlsx_path):
 
     sugerido, extensiones, ahorros, costo_optimo = solve_optimal(
         activities, paths, t_optimal
+    )
+
+    t_target = min(t_optimal + extra_target_days, t_normal)
+    sugerido_t, extensiones_t, ahorros_t, costo_optimo_t = solve_optimal(
+        activities, paths, t_target
     )
 
     return {
@@ -535,6 +544,12 @@ def compute_analysis(xlsx_path):
         "total_crash_cost": total_crash_cost,
         "t_normal": t_normal,
         "t_optimal": t_optimal,
+        "extra_target_days": extra_target_days,
+        "t_target": t_target,
+        "sugerido_target": sugerido_t,
+        "extensiones_target": extensiones_t,
+        "ahorros_target": ahorros_t,
+        "costo_optimo_target": costo_optimo_t,
     }
 
 

@@ -2,3 +2,4 @@ pandas
 openpyxl
 scipy
 python-docx
+questionary
